@@ -25,7 +25,7 @@ try:
     assert r.status_code == 200
 except AssertionError:
     print "Error de conexion o de credenciales"
-    sys.exit(2)
+    sys.exit(1)
 print "Inicio sesion correcto"
 
 response = request('https://convore.com/api/groups.json', conv_auth)
@@ -35,8 +35,11 @@ for message in response['groups']:
     if message['name'] == ' '.join(args.group).encode('utf-8'):
         print "Grupo:",message['id']
         group_id=message['id']
-
-#group_id: 10142
+try:
+    assert group_id
+except NameError:
+    print "Grupo no encontrado"
+    sys.exit(2)
 
 print "Buscando tema: "+' '.join(args.topic)
 response = request('https://convore.com/api/groups/'+group_id+'/topics.json', conv_auth)
@@ -44,8 +47,11 @@ for message in response['topics']:
     if message['name'] == ' '.join(args.topic).encode('utf-8'):
         print "Tema:",message['id']
         topic_id=message['id']
-
-#topic_id: 36732
+try:
+    assert topic_id
+except NameError:
+    print "Tema no encontrado"
+    sys.exit(3)
 
 #obtener todos los fragmentos de conversacion
 print "Obteniendo fragmentos conversacion"
