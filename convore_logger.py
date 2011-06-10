@@ -53,39 +53,28 @@ except NameError:
     print "Tema no encontrado"
     sys.exit(3)
 
-#obtener todos los fragmentos de conversacion
+#obtener los fragmentos de conversacion
 print "Obteniendo fragmentos conversacion"
-fragments=[]
-response = request('https://convore.com/api/topics/'+topic_id+'/messages.json', conv_auth)
-print "1 pagina -> id="+response['until_id']
+fragments = ''
+counter = 0
+text=[]
 
-if response['until_id'] != None:
-    fragments.append(response['until_id'])
-    while True:
-        response = request('https://convore.com/api/topics/'+topic_id+'/messages.json?until_id='+fragments[-1], conv_auth)
-        if response['until_id'] != None:
-            fragments.append(response['until_id'])
-            print str(len(fragments))+" paginas -> id="+fragments[-1]
-        else:
-            print str(len(fragments)+1)+" paginas"
-            break
-
-#obtener la conversacion desde el principio
-print "Creando archivo de log"
-f = open('log.txt', 'w')
-try:
-    while True:
-        response = request('https://convore.com/api/topics/'+topic_id+'/messages.json?until_id='+fragments.pop(), conv_auth)
-        print "Guardando pagina "+str(len(fragments)+2)
-        for message in response['messages']:
-            line = message['user']['username']+u': '+message['message']+u'\n\r'
-            f.write(line.encode('utf-8'))
-except IndexError:
-    response = request('https://convore.com/api/topics/'+topic_id+'/messages.json', conv_auth)
-    print "Guardando pagina 1"
+while True:
+    lines = []
+    response = request('https://convore.com/api/topics/'+topic_id+'/messages.json?until_id='+fragments, conv_auth)
+    fragments = response['until_id']
     for message in response['messages']:
-            line = message['user']['username']+u': '+message['message']+u'\n\r'
-            f.write(line.encode('utf-8'))
-print "Cerrando archivo de log"
-f.close()
+        lines.append(message['user']['username']+u': '+message['message']+u'\n\r')
+    lines.reverse()
+    text.extend(lines)
+    counter += 1
+    if fragments == None:
+        print str(counter)+" paginas"
+        break
+    else: print str(counter)+" paginas -> id="+fragments
+
+with open('log.txt', 'w') as f:
+    text.reverse()
+    for line in text: f.write(line.encode('utf-8'))
+
 print "----Backup realizado exitosamente----"
